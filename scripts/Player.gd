@@ -104,7 +104,7 @@ func _physics_process(delta):
 	velocity.y += gravity * gravity_scale * delta
 	
 	# 移动输入
-	var input_x = Input.get_axis("move_left", "move_right")
+	var input_x = Input.get_axis("ui_left", "ui_right")
 	velocity.x = input_x * speed
 	
 	# 蓄力更新
@@ -115,7 +115,7 @@ func _physics_process(delta):
 			charge_level = 2
 	
 	# 跳跃
-	if Input.is_action_just_pressed("jump") and is_on_ground:
+	if Input.is_action_just_pressed("ui_accept") and is_on_ground:
 		velocity.y = jump_force
 		is_on_ground = false
 	
@@ -149,19 +149,19 @@ func _detect_ground():
 			break
 
 func _unhandled_input(event):
-	if event.is_action_pressed("attack"):
+	if event.is_action_pressed("ui_select"):
 		_attack_start()
 	
-	if event.is_action_released("attack"):
+	if event.is_action_released("ui_select"):
 		_attack_end()
 	
-	if event.is_action_pressed("skill1"):
+	if event.is_action_pressed("ui_up"):
 		_use_skill(0)
 	
-	if event.is_action_pressed("skill2"):
+	if event.is_action_pressed("ui_page_up"):
 		_use_skill(1)
 	
-	if event.is_action_pressed("skill3"):
+	if event.is_action_pressed("ui_home"):
 		_use_skill(2)
 
 func _attack_start():

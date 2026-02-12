@@ -74,21 +74,14 @@ func _setup_ui():
 	
 	# 技能提示
 	var skill_title = Label.new()
-	skill_title.text = "技能: K-飞行 L-光束 U-地刺"
+	skill_title.text = "技能: W上-飞行 | PgUp-光束 | Home-地刺"
 	skill_title.position = Vector2(500, 15)
 	skill_title.add_theme_font_size_override("font_size", 16)
 	add_child(skill_title)
 	
-	# 武器提示
-	var weapon_info = Label.new()
-	weapon_info.text = "武器: 拳法 (可切换棍法)"
-	weapon_info.position = Vector2(500, 35)
-	weapon_info.add_theme_font_size_override("font_size", 14)
-	add_child(weapon_info)
-	
 	# 操作提示
 	var controls = Label.new()
-	controls.text = "移动:AD 跳跃:W 攻击:J 技能:K/L/U"
+	controls.text = "移动:AD 跳跃:空格 攻击:回车 暂停:ESC"
 	controls.position = Vector2(800, 15)
 	controls.add_theme_font_size_override("font_size", 16)
 	add_child(controls)

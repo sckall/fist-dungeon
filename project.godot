@@ -7,7 +7,7 @@ config/name="拳皇地牢"
 config/description="Rogue-like动作游戏 - 空洞骑士风格"
 run/main_scene="res://scripts/Game.gd"
 config/features=PackedStringArray("4.6", "GL Compatibility")
-config/icon="res://assets/icon.svg"
+config/icon="res://icon.svg"
 
 [display]
 
@@ -17,14 +17,10 @@ window/stretch/mode="viewport"
 
 [input]
 
-move_left={"deadzone":0.5,"events":[{"physical_keycode":KEY_A},{"keycode":KEY_LEFT}]}
-move_right={"deadzone":0.5,"events":[{"physical_keycode":KEY_D},{"keycode":KEY_RIGHT}]}
-jump={"deadzone":0.5,"events":[{"physical_keycode":KEY_W},{"keycode":KEY_UP}]}
-attack={"deadzone":0.5,"events":[{"physical_keycode":KEY_J},{"keycode":KEY_Z}]}
-skill1={"deadzone":0.5,"events":[{"physical_keycode":KEY_K},{"keycode":KEY_X}]}
-skill2={"deadzone":0.5,"events":[{"physical_keycode":KEY_L},{"keycode":KEY_C}]}
-skill3={"deadzone":0.5,"events":[{"physical_keycode":KEY_U},{"keycode":KEY_V}]}
-pause={"deadzone":0.5,"events":[{"physical_keycode":KEY_ESCAPE}]}
+ui_left={"deadzone":0.5,"events":[]}
+ui_right={"deadzone":0.5,"events":[]}
+ui_up={"deadzone":0.5,"events":[]}
+ui_select={"deadzone":0.5,"events":[]}
 
 [rendering]
 
