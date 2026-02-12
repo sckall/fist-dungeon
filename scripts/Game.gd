@@ -255,7 +255,9 @@ func _update_hud() -> void:
 	
 	hp_label.text = "生命 %d / %d" % [player.hp, player.max_hp]
 	
-	var enemies = [] if not dungeon else dungeon.get("enemies")
+	var enemies = []
+	if dungeon and dungeon.has("enemies"):
+		enemies = dungeon.get("enemies")
 	progress_label.text = "关卡 %d  剩余敌人 %d  已击败 %d" % [level, enemies.size(), defeated_enemies]
 	
 	var exit_status = "已开启" if enemies.is_empty() else "封锁中"
