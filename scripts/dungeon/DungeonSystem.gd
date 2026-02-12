@@ -1,8 +1,7 @@
 extends Node2D
+class_name DungeonSystem
 
 # ============ 地牢系统 ============
-
-class_name DungeonSystem extends Node2D
 
 # 预加载敌人
 const BatEnemy = preload("res://scripts/enemies/Bat.gd")
