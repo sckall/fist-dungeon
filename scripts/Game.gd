@@ -1,109 +1,122 @@
 extends Node2D
 
-# ============ 游戏主控制器 ============
-
-var player: Node = null
-var dungeon: Node = null
-var ui: Node = null
-
-var current_level: int = 1
-var is_game_over: bool = false
+# ============ 游戏主控制器 - 最小测试版 ============
 
 func _ready():
 	print("========================================")
-	print("  🎮 拳皇地牢 - 游戏启动")
+	print("  🎮 拳皇地牢 - 测试版")
 	print("========================================")
 	
-	# 动态加载地牢系统
-	var dungeon_script = load("res://scripts/dungeon/DungeonSystem.gd")
-	if dungeon_script:
-		dungeon = dungeon_script.new()
-		add_child(dungeon)
+	# 创建玩家（简单色块）
+	var player = CharacterBody2D.new()
+	player.position = Vector2(640, 360)
+	player.name = "Player"
+	add_child(player)
 	
-	# 动态加载玩家
-	var player_script = load("res://scripts/Player.gd")
-	if player_script:
-		player = player_script.new()
-		player.position = Vector2(100, 400)
-		add_child(player)
+	# 玩家身体
+	var body = ColorRect.new()
+	body.size = Vector2(32, 48)
+	body.position = Vector2(-16, -24)
+	body.color = Color(0.2, 0.6, 1.0)
+	player.add_child(body)
 	
-	# 动态加载UI
-	var ui_script = load("res://scripts/ui/GameUI.gd")
-	if ui_script:
-		ui = ui_script.new()
-		add_child(ui)
+	# 相机
+	var camera = Camera2D.new()
+	camera.zoom = Vector2(1.5, 1.5)
+	player.add_child(camera)
 	
-	print("游戏就绪!")
+	# 创建地面
+	var floor = StaticBody2D.new()
+	floor.position = Vector2(640, 550)
+	
+	var shape = CollisionShape2D.new()
+	shape.shape = RectangleShape2D.new()
+	shape.shape.size = Vector2(1280, 100)
+	floor.add_child(shape)
+	
+	var rect = ColorRect.new()
+	rect.size = Vector2(1280, 100)
+	rect.color = Color(0.25, 0.2, 0.15)
+	floor.add_child(rect)
+	
+	add_child(floor)
+	
+	# 创建几个平台
+	for i in range(5):
+		var plat = StaticBody2D.new()
+		plat.position = Vector2(200 + i * 200, 400 + randi() % 100)
+		
+		var p_shape = CollisionShape2D.new()
+		p_shape.shape = RectangleShape2D.new()
+		p_shape.shape.size = Vector2(100, 20)
+		plat.add_child(p_shape)
+		
+		var p_rect = ColorRect.new()
+		p_rect.size = Vector2(100, 20)
+		p_rect.color = Color(0.35, 0.45, 0.25)
+		plat.add_child(p_rect)
+		
+		add_child(plat)
+	
+	# 创建敌人
+	var enemy = _create_enemy("slime", 400, 500)
+	add_child(enemy)
+	
+	var enemy2 = _create_enemy("bat", 600, 200)
+	add_child(enemy2)
+	
+	var enemy3 = _create_enemy("goblin", 800, 500)
+	add_child(enemy3)
+	
+	# 创建UI
+	var ui = Control.new()
+	ui.name = "UI"
+	add_child(ui)
+	
+	var label = Label.new()
+	label.text = "🎮 拳皇地牢 - 测试版\n按 空格 跳跃 | 按 回车 攻击\n清完敌人进入下一关"
+	label.position = Vector2(440, 50)
+	label.add_theme_font_size_override("font_size", 20)
+	ui.add_child(label)
+	
+	var hp_label = Label.new()
+	hp_label.name = "HPLabel"
+	hp_label.text = "❤️ HP: 5 | 💰 金币: 0"
+	hp_label.position = Vector2(50, 50)
+	hp_label.add_theme_font_size_override("font_size", 18)
+	ui.add_child(hp_label)
+	
+	print("游戏创建完成!")
+	print("按 F5 重新运行")
+
+func _create_enemy(type: String, x: float, y: float) -> Node2D:
+	var enemy = Node2D.new()
+	enemy.position = Vector2(x, y)
+	enemy.set_meta("type", type)
+	enemy.set_meta("hp", 3)
+	enemy.set_meta("is_alive", true)
+	
+	match type:
+		"slime":
+			var body = ColorRect.new()
+			body.size = Vector2(32, 24)
+			body.position = Vector2(-16, -24)
+			body.color = Color(0.3, 0.7, 0.3)
+			enemy.add_child(body)
+		"bat":
+			var body = ColorRect.new()
+			body.size = Vector2(24, 16)
+			body.position = Vector2(-12, -8)
+			body.color = Color(0.4, 0.3, 0.5)
+			enemy.add_child(body)
+		"goblin":
+			var body = ColorRect.new()
+			body.size = Vector2(28, 36)
+			body.position = Vector2(-14, -36)
+			body.color = Color(0.4, 0.5, 0.3)
+			enemy.add_child(body)
+	
+	return enemy
 
 func _process(delta):
-	if not player or not dungeon:
-		return
-	
-	# 检测玩家拾取物品
-	_check_item_pickup()
-	
-	# 检测出口
-	_check_exit()
-	
-	# 检测敌人碰撞
-	_check_enemy_collision()
-
-func _check_item_pickup():
-	if not dungeon or not dungeon.has("items"):
-		return
-	
-	var items = dungeon.get("items")
-	for item in items:
-		if is_instance_valid(item) and player.position.distance_to(item.position) < 30:
-			if player.has_method("collect_item"):
-				player.collect_item(item)
-			items.erase(item)
-
-func _check_exit():
-	if not dungeon or not dungeon.has("exits"):
-		return
-	
-	var exits = dungeon.get("exits")
-	for exit in exits:
-		if is_instance_valid(exit) and player.position.distance_to(exit.position) < 50:
-			if dungeon.has_method("all_enemies_defeated") and dungeon.all_enemies_defeated():
-				_next_level()
-
-func _check_enemy_collision():
-	if not dungeon or not dungeon.has("enemies"):
-		return
-	
-	var enemies = dungeon.get("enemies")
-	for enemy in enemies:
-		if is_instance_valid(enemy) and enemy.get("is_alive", false):
-			if enemy.has_meta("damage") and player.position.distance_to(enemy.position) < 30:
-				if player.has_method("take_damage"):
-					player.take_damage()
-
-func _next_level():
-	current_level += 1
-	if player and player.has("save_system"):
-		var save = player.get("save_system")
-		save.set_level(current_level)
-		save.save_game()
-	
-	print("=== 进入关卡 %d ===" % current_level)
-	
-	if dungeon and dungeon.has_method("_generate_level"):
-		dungeon._generate_level()
-
-func _input(event):
-	if event.is_action_pressed("pause"):
-		_toggle_pause()
-
-func _toggle_pause():
-	get_tree().paused = not get_tree().paused
-	
-	var pause_text = Label.new()
-	pause_text.text = "游戏暂停" if get_tree().paused else ""
-	pause_text.position = Vector2(540, 350)
-	pause_text.add_theme_font_size_override("font_size", 32)
-	add_child(pause_text)
-	
-	await get_tree().create_timer(1.0).timeout
-	pause_text.queue_free()
+	pass
