@@ -7,6 +7,18 @@ signal health_changed(current, max)
 signal gold_changed(amount)
 signal level_changed(level)
 
+# 预加载所有类
+const WeaponSystemScript = preload("res://scripts/weapons/WeaponSystem.gd")
+const FistSystemScript = preload("res://scripts/weapons/FistSystem.gd")
+const StaffWeaponScript = preload("res://scripts/weapons/StaffWeapon.gd")
+const SkillBaseScript = preload("res://scripts/skills/SkillBase.gd")
+const FlightSkillScript = preload("res://scripts/skills/FlightSkill.gd")
+const BeamSkillScript = preload("res://scripts/skills/BeamSkill.gd")
+const SpikeSkillScript = preload("res://scripts/skills/SpikeSkill.gd")
+const InvisibilitySkillScript = preload("res://scripts/skills/InvisibilitySkill.gd")
+const HealSkillScript = preload("res://scripts/skills/HealSkill.gd")
+const PoisonSkillScript = preload("res://scripts/skills/PoisonSkill.gd")
+
 # 属性
 var hp: int = 5
 var max_hp: int = 5
@@ -31,23 +43,23 @@ var charge_level: int = 0
 var gold: int = 0
 
 # 武器
-var weapon: WeaponSystem
+var weapon: Node
 var weapon_name: String = "拳法"
 
 # 技能
-var skill1: SkillBase
-var skill2: SkillBase
-var skill3: SkillBase
+var skill1: Node
+var skill2: Node
+var skill3: Node
 var skills: Array = []
 
 # 存档
-var save_system: SaveSystem
+var save_system: Node
 
 func _ready():
 	add_to_group("player")
 	
 	# 初始化存档
-	save_system = SaveSystem.new()
+	save_system = preload("res://scripts/ui/SaveSystem.gd").new()
 	add_child(save_system)
 	load_progress()
 	
@@ -60,22 +72,22 @@ func _ready():
 	print("玩家初始化完成! HP:%d 金币:%d 关卡:%d" % [hp, gold, save_system.save_data["level"]])
 
 func _init_weapon():
-	weapon = FistSystem.new()
+	weapon = FistSystemScript.new()
 	add_child(weapon)
-	weapon_name = weapon.weapon_name
+	weapon_name = "拳法"
 
 func _init_skills():
-	skill1 = FlightSkill.new()
-	skill2 = BeamSkill.new()
-	skill3 = SpikeSkill.new()
+	skill1 = FlightSkillScript.new()
+	skill2 = BeamSkillScript.new()
+	skill3 = SpikeSkillScript.new()
 	
 	# 额外技能（可在隐藏房间获得）
 	if save_system.has_skill("invisibility"):
-		skill1 = InvisibilitySkill.new()
+		skill1 = InvisibilitySkillScript.new()
 	if save_system.has_skill("heal"):
-		skill2 = HealSkill.new()
+		skill2 = HealSkillScript.new()
 	if save_system.has_skill("poison"):
-		skill3 = PoisonSkill.new()
+		skill3 = PoisonSkillScript.new()
 	
 	skills = [skill1, skill2, skill3]
 	
@@ -91,12 +103,12 @@ func switch_weapon(weapon_type: String):
 	
 	match weapon_type:
 		"fist":
-			weapon = FistSystem.new()
+			weapon = FistSystemScript.new()
 		"staff":
-			weapon = StaffWeapon.new()
+			weapon = StaffWeaponScript.new()
 	
 	add_child(weapon)
-	weapon_name = weapon.weapon_name
+	weapon_name = "棍法"
 	print("切换武器: %s" % weapon_name)
 
 func _physics_process(delta):
@@ -108,11 +120,8 @@ func _physics_process(delta):
 	velocity.x = input_x * speed
 	
 	# 蓄力更新
-	if is_charging:
-		charge_time += delta
-		charge_level = 1 if charge_time > 0.3 else 0
-		if charge_time > 0.6:
-			charge_level = 2
+	if is_charging and weapon and weapon.has_method("update_charge"):
+		weapon.update_charge(delta)
 	
 	# 跳跃
 	if Input.is_action_just_pressed("ui_accept") and is_on_ground:
@@ -134,11 +143,6 @@ func _physics_process(delta):
 	# 掉落死亡
 	if position.y > 700:
 		die()
-	
-	# 更新攻击状态
-	if is_instance_valid(weapon):
-		if is_charging:
-			weapon.update_charge(delta)
 
 func _detect_ground():
 	is_on_ground = false
@@ -169,11 +173,11 @@ func _attack_start():
 	is_charging = true
 	charge_time = 0.0
 	charge_level = 0
-	if weapon:
+	if weapon and weapon.has_method("start_charge"):
 		weapon.start_charge()
 
 func _attack_end():
-	if is_charging and weapon:
+	if is_charging and weapon and weapon.has_method("release_charge"):
 		var direction = Vector2(1, 0) if facing_right else Vector2(-1, 0)
 		weapon.release_charge(direction)
 	
@@ -185,10 +189,10 @@ func _use_skill(index: int):
 		return
 	
 	var skill = skills[index]
-	if skill and skill.can_use():
+	if skill and skill.has_method("activate"):
 		var target_pos = get_global_mouse_position()
 		skill.activate(self, target_pos)
-		print("使用技能: %s" % skill.skill_name)
+		print("使用技能: %s" % skill.skill_name if skill.has_method("get_skill_name") else "技能")
 
 func take_damage():
 	if is_invincible:

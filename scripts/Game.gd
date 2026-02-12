@@ -2,6 +2,11 @@ extends Node2D
 
 # ============ 游戏主控制器 ============
 
+# 预加载所有类
+const PlayerScript = preload("res://scripts/Player.gd")
+const DungeonScript = preload("res://scripts/dungeon/DungeonSystem.gd")
+const GameUIScript = preload("res://scripts/ui/GameUI.gd")
+
 var player: Node2D
 var dungeon: Node2D
 var ui: Node2D
@@ -15,22 +20,22 @@ func _ready():
 	print("========================================")
 	
 	# 创建地牢系统
-	dungeon = DungeonSystem.new()
+	dungeon = DungeonScript.new()
 	add_child(dungeon)
 	
 	# 创建玩家
-	player = Player.new()
+	player = PlayerScript.new()
 	player.position = Vector2(100, 400)
 	add_child(player)
 	
 	# 创建UI
-	ui = GameUI.new()
+	ui = GameUIScript.new()
 	add_child(ui)
 	
 	# 连接玩家信号
 	player.died.connect(_on_player_died)
 	
-	print("游戏就绪! 按 J 攻击, K/L/U 使用技能")
+	print("游戏就绪! 按 回车 攻击, W上 PgUp Home 使用技能")
 
 func _process(delta):
 	# 检测玩家拾取物品
@@ -42,9 +47,6 @@ func _process(delta):
 		
 		# 检测敌人碰撞
 		_check_enemy_collision()
-		
-		# 检测Boss
-		_check_boss()
 
 func _check_item_pickup():
 	if not is_instance_valid(dungeon):
@@ -73,17 +75,6 @@ func _check_enemy_collision():
 		if is_instance_valid(enemy) and enemy.is_alive:
 			if enemy.has_meta("damage") and player.position.distance_to(enemy.position) < 30:
 				player.take_damage()
-
-func _check_boss():
-	if not is_instance_valid(dungeon):
-		return
-	
-	for enemy in dungeon.enemies:
-		if is_instance_valid(enemy) and enemy is GoblinKing:
-			if enemy.is_alive:
-				# Boss专属碰撞
-				if player.position.distance_to(enemy.position) < 50:
-					player.take_damage()
 
 func _on_player_died():
 	print("玩家死亡! 3秒后复活...")

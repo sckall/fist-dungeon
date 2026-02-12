@@ -4,6 +4,11 @@ extends Node2D
 
 class_name DungeonSystem extends Node2D
 
+# 预加载敌人
+const BatEnemy = preload("res://scripts/enemies/Bat.gd")
+const SlimeEnemy = preload("res://scripts/enemies/Slime.gd")
+const GoblinEnemy = preload("res://scripts/enemies/Goblin.gd")
+
 # 房间管理
 var rooms: Array = []
 var current_room_index: int = 0
@@ -123,11 +128,11 @@ func _create_enemy(type: String, x: float, y: float) -> Node2D:
 	
 	match type:
 		"bat":
-			enemy = Bat.new()
+			enemy = BatEnemy.new()
 		"slime":
-			enemy = Slime.new()
+			enemy = SlimeEnemy.new()
 		"goblin":
-			enemy = Goblin.new()
+			enemy = GoblinEnemy.new()
 	
 	if enemy:
 		enemy.position = Vector2(x, y)
