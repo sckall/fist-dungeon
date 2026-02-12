@@ -7,9 +7,10 @@ class_name SaveSystem extends Node
 var save_data: Dictionary = {
 	"level": 1,
 	"gold": 0,
-	"skills_unlocked": [],
+	"skills_unlocked": ["flight", "beam", "spike"],
 	"weapons_unlocked": ["fist"],
 	"current_skill": 0,
+	"current_weapon": "fist",
 	"high_score": 0,
 	"deaths": 0
 }

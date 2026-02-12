@@ -69,12 +69,35 @@ func _init_skills():
 	skill2 = BeamSkill.new()
 	skill3 = SpikeSkill.new()
 	
+	# 额外技能（可在隐藏房间获得）
+	if save_system.has_skill("invisibility"):
+		skill1 = InvisibilitySkill.new()
+	if save_system.has_skill("heal"):
+		skill2 = HealSkill.new()
+	if save_system.has_skill("poison"):
+		skill3 = PoisonSkill.new()
+	
 	skills = [skill1, skill2, skill3]
 	
-	# 解锁技能
+	# 默认解锁
 	save_system.unlock_skill("flight")
 	save_system.unlock_skill("beam")
 	save_system.unlock_skill("spike")
+
+# 切换武器
+func switch_weapon(weapon_type: String):
+	if weapon:
+		weapon.queue_free()
+	
+	match weapon_type:
+		"fist":
+			weapon = FistSystem.new()
+		"staff":
+			weapon = StaffWeapon.new()
+	
+	add_child(weapon)
+	weapon_name = weapon.weapon_name
+	print("切换武器: %s" % weapon_name)
 
 func _physics_process(delta):
 	# 重力

@@ -79,6 +79,13 @@ func _setup_ui():
 	skill_title.add_theme_font_size_override("font_size", 16)
 	add_child(skill_title)
 	
+	# 武器提示
+	var weapon_info = Label.new()
+	weapon_info.text = "武器: 拳法 (可切换棍法)"
+	weapon_info.position = Vector2(500, 35)
+	weapon_info.add_theme_font_size_override("font_size", 14)
+	add_child(weapon_info)
+	
 	# 操作提示
 	var controls = Label.new()
 	controls.text = "移动:AD 跳跃:W 攻击:J 技能:K/L/U"
