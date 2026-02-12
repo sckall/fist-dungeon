@@ -3,11 +3,6 @@ class_name DungeonSystem
 
 # ============ 地牢系统 ============
 
-# 预加载敌人
-const BatEnemy = preload("res://scripts/enemies/Bat.gd")
-const SlimeEnemy = preload("res://scripts/enemies/Slime.gd")
-const GoblinEnemy = preload("res://scripts/enemies/Goblin.gd")
-
 # 房间管理
 var rooms: Array = []
 var current_room_index: int = 0
@@ -34,19 +29,10 @@ func _generate_level():
 	clear_all()
 	print("=== 生成地牢 关卡 %d ===" % level_num)
 	
-	# 创建地板
 	_create_floor()
-	
-	# 生成随机房间
 	_generate_rooms()
-	
-	# 生成敌人
 	_spawn_enemies()
-	
-	# 生成道具
 	_spawn_items()
-	
-	# 出口
 	_create_exit()
 
 func clear_all():
@@ -58,10 +44,6 @@ func clear_all():
 	
 	if floor and is_instance_valid(floor):
 		floor.queue_free()
-	
-	platforms.clear()
-	enemies.clear()
-	items.clear()
 
 func _create_floor():
 	floor = StaticBody2D.new()
@@ -83,7 +65,6 @@ func _create_floor():
 	platforms.append(floor)
 
 func _generate_rooms():
-	# 简化：在一个大房间里生成多个平台
 	var platform_count = 5 + level_num * 2
 	
 	for i in range(platform_count):
@@ -125,15 +106,12 @@ func _spawn_enemies():
 func _create_enemy(type: String, x: float, y: float) -> Node2D:
 	var enemy: Node2D
 	
-	match type:
-		"bat":
-			enemy = BatEnemy.new()
-		"slime":
-			enemy = SlimeEnemy.new()
-		"goblin":
-			enemy = GoblinEnemy.new()
+	# 动态加载敌人脚本
+	var script_path = "res://scripts/enemies/" + type.capitalize() + ".gd"
+	var script = load(script_path)
 	
-	if enemy:
+	if script:
+		enemy = script.new()
 		enemy.position = Vector2(x, y)
 		add_child(enemy)
 	
@@ -186,16 +164,10 @@ func _create_exit():
 	rect.color = Color(0.3, 0.7, 1.0)
 	exit.add_child(rect)
 	
-	# 传送门效果
-	var tween = rect.create_tween().set_loops()
-	tween.tween_property(rect, "modulate", Color(0.5, 0.9, 1.0), 0.5)
-	tween.tween_property(rect, "modulate", Color(0.3, 0.7, 1.0), 0.5)
-	
 	add_child(exit)
 	exits.append(exit)
 
 func _process(delta):
-	# 敌人AI更新
 	for enemy in enemies:
 		if is_instance_valid(enemy):
 			enemy._physics_process(delta)
@@ -207,7 +179,7 @@ func next_level():
 func get_enemy_count() -> int:
 	var count = 0
 	for e in enemies:
-		if is_instance_valid(e) and e.is_alive:
+		if is_instance_valid(e) and e.get("is_alive", false):
 			count += 1
 	return count
 

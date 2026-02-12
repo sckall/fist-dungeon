@@ -7,18 +7,6 @@ signal health_changed(current, max)
 signal gold_changed(amount)
 signal level_changed(level)
 
-# 预加载所有类
-const WeaponSystemScript = preload("res://scripts/weapons/WeaponSystem.gd")
-const FistSystemScript = preload("res://scripts/weapons/FistSystem.gd")
-const StaffWeaponScript = preload("res://scripts/weapons/StaffWeapon.gd")
-const SkillBaseScript = preload("res://scripts/skills/SkillBase.gd")
-const FlightSkillScript = preload("res://scripts/skills/FlightSkill.gd")
-const BeamSkillScript = preload("res://scripts/skills/BeamSkill.gd")
-const SpikeSkillScript = preload("res://scripts/skills/SpikeSkill.gd")
-const InvisibilitySkillScript = preload("res://scripts/skills/InvisibilitySkill.gd")
-const HealSkillScript = preload("res://scripts/skills/HealSkill.gd")
-const PoisonSkillScript = preload("res://scripts/skills/PoisonSkill.gd")
-
 # 属性
 var hp: int = 5
 var max_hp: int = 5
@@ -43,73 +31,66 @@ var charge_level: int = 0
 var gold: int = 0
 
 # 武器
-var weapon: Node
+var weapon: Node = null
 var weapon_name: String = "拳法"
 
 # 技能
-var skill1: Node
-var skill2: Node
-var skill3: Node
+var skill1: Node = null
+var skill2: Node = null
+var skill3: Node = null
 var skills: Array = []
 
 # 存档
-var save_system: Node
+var save_system: Node = null
 
 func _ready():
 	add_to_group("player")
 	
-	# 初始化存档
-	save_system = preload("res://scripts/ui/SaveSystem.gd").new()
-	add_child(save_system)
-	load_progress()
+	# 动态加载存档
+	var save_script = load("res://scripts/ui/SaveSystem.gd")
+	if save_script:
+		save_system = save_script.new()
+		add_child(save_system)
+		load_progress()
 	
-	# 初始化武器
+	# 动态加载武器
 	_init_weapon()
 	
-	# 初始化技能
+	# 动态加载技能
 	_init_skills()
 	
-	print("玩家初始化完成! HP:%d 金币:%d 关卡:%d" % [hp, gold, save_system.save_data["level"]])
+	print("玩家初始化完成!")
 
 func _init_weapon():
-	weapon = FistSystemScript.new()
-	add_child(weapon)
-	weapon_name = "拳法"
+	var weapon_script = load("res://scripts/weapons/FistSystem.gd")
+	if weapon_script:
+		weapon = weapon_script.new()
+		add_child(weapon)
+		weapon_name = "拳法"
 
 func _init_skills():
-	skill1 = FlightSkillScript.new()
-	skill2 = BeamSkillScript.new()
-	skill3 = SpikeSkillScript.new()
+	# 飞行
+	var flight_script = load("res://scripts/skills/FlightSkill.gd")
+	if flight_script:
+		skill1 = flight_script.new()
 	
-	# 额外技能（可在隐藏房间获得）
-	if save_system.has_skill("invisibility"):
-		skill1 = InvisibilitySkillScript.new()
-	if save_system.has_skill("heal"):
-		skill2 = HealSkillScript.new()
-	if save_system.has_skill("poison"):
-		skill3 = PoisonSkillScript.new()
+	# 光束
+	var beam_script = load("res://scripts/skills/BeamSkill.gd")
+	if beam_script:
+		skill2 = beam_script.new()
+	
+	# 地刺
+	var spike_script = load("res://scripts/skills/SpikeSkill.gd")
+	if spike_script:
+		skill3 = spike_script.new()
 	
 	skills = [skill1, skill2, skill3]
 	
-	# 默认解锁
-	save_system.unlock_skill("flight")
-	save_system.unlock_skill("beam")
-	save_system.unlock_skill("spike")
-
-# 切换武器
-func switch_weapon(weapon_type: String):
-	if weapon:
-		weapon.queue_free()
-	
-	match weapon_type:
-		"fist":
-			weapon = FistSystemScript.new()
-		"staff":
-			weapon = StaffWeaponScript.new()
-	
-	add_child(weapon)
-	weapon_name = "棍法"
-	print("切换武器: %s" % weapon_name)
+	# 默认解锁技能
+	if save_system:
+		save_system.unlock_skill("flight")
+		save_system.unlock_skill("beam")
+		save_system.unlock_skill("spike")
 
 func _physics_process(delta):
 	# 重力
@@ -192,7 +173,7 @@ func _use_skill(index: int):
 	if skill and skill.has_method("activate"):
 		var target_pos = get_global_mouse_position()
 		skill.activate(self, target_pos)
-		print("使用技能: %s" % skill.skill_name if skill.has_method("get_skill_name") else "技能")
+		print("使用技能!")
 
 func take_damage():
 	if is_invincible:
@@ -220,11 +201,10 @@ func die():
 	print("=== 玩家死亡! ===")
 	
 	# 损失金币
-	save_system.lose_half_gold()
-	save_system.add_death()
-	
-	# 保存
-	save_system.save_game()
+	if save_system:
+		save_system.lose_half_gold()
+		save_system.add_death()
+		save_system.save_game()
 	
 	# 重生
 	hp = max_hp
@@ -235,9 +215,11 @@ func die():
 	died.emit()
 	
 	# 重新加载当前关卡
-	get_parent().get_node("Dungeon")._generate_level()
+	var dungeon = get_parent().get_node_or_null("Dungeon")
+	if dungeon:
+		dungeon._generate_level()
 	
-	print("已复活! 剩余金币: %d" % save_system.save_data["gold"])
+	print("已复活!")
 
 func heal(amount: int):
 	hp = min(hp + amount, max_hp)
@@ -245,7 +227,8 @@ func heal(amount: int):
 
 func collect_gold(amount: int):
 	gold += amount
-	save_system.add_gold(amount)
+	if save_system:
+		save_system.add_gold(amount)
 	gold_changed.emit(gold)
 
 func collect_item(item: Node2D):
@@ -262,11 +245,7 @@ func load_progress():
 	if save_system:
 		hp = max_hp
 		gold = save_system.save_data.get("gold", 0)
-		level_changed.emit(save_system.save_data["level"])
-
-func save_progress():
-	if save_system:
-		save_system.save_game()
+		level_changed.emit(save_system.save_data.get("level", 1))
 
 func get_hp_percent() -> float:
 	if max_hp <= 0:
