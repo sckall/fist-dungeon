@@ -1,0 +1,21 @@
+# Godot
+.import/
+export/
+export_presets.cfg
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+*.sublime-*
+
+# Backup
+*~
+
+# Logs
+*.log
+
+# Cache
+.cache/
